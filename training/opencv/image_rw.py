@@ -24,12 +24,17 @@ deltaimg = img1 - img2
 noise_std = (img1 - img2).std()
 print (noise_std)
 # show image with matplotlib.pyplot and cv2
-plt.imshow(img1, cmap='gray')
+plt.imshow(img, cmap='gray')
 plt.show()
 plt.imshow(deltaimg, cmap='gray', vmin=-25, vmax=25)
 plt.show()
 
+# img = np.ones((149, 894), dtype=np.uint8) * 128
+
+b = np.zeros((img.shape[0]-2, img.shape[1]-2, 9))
+for i in range(1, img.shape[0]-1):
+    for j in range(1, img.shape[1]-1):
+        b[i-1, j-1, :] = img[(i-1):(i+2), (j-1):(j+2)].reshape((9,))
+print(b)
 
 
-
-#

@@ -48,7 +48,7 @@ def get_circular_mask(img, center=None, radius=None):
 
 if __name__ == '__main__':
     sz = (128,1024)
-    img = np.ones(sz, dtype=np.uint8) * (np.random.rand(sz[0],sz[1] )*255)
+    img = np.ones(sz, dtype=np.uint8) #* (np.random.rand(sz[0],sz[1] )*255)
     img1 = np.copy(img)
     for i in range (7):
         inpaint_circular_mask(img1, (128*(i+1), 64), 32, i*(255-32), inside=True)
