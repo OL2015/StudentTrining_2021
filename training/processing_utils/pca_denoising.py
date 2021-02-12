@@ -57,14 +57,16 @@ def denoise_image(img_src, accum):
 
 if __name__ == '__main__':
     path = r"..\data\ResultImage.png"
-    accum = 0.95
-    dev = 5.
+    accum = 0.83
+    noise_dev = 10.
     img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-    noise1 = np.random.normal(scale=dev, size=(149, 894))
+    noise1 = np.random.normal(scale=noise_dev, size=img.shape)
     img1 = img + noise1
+
     img_denoise = denoise_image(img1, accum)
 
     fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
+    fig.suptitle('Source, noised, and denoised images')
     ax0.imshow(img, interpolation='none', cmap='gray', vmin=0, vmax=255)
     ax1.imshow(img1, interpolation='none',  cmap='gray', vmin=0, vmax=255)
     ax2.imshow(img_denoise, interpolation='none',  cmap='gray', vmin=0, vmax=255)
