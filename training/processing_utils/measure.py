@@ -43,6 +43,17 @@ def get_circular_mask(img, center=None, radius=None):
     mask = dist_from_center <= radius
     return mask
 
+def get_dist_mask(img, center=None, radius=None):
+    h, w = img.shape[0], img.shape[1]
+    if center is None: # use the middle of the image
+        center = [int(w/2), int(h/2)]
+    if radius is None: # use the smallest distance between the center and image walls
+        radius = min(center[0], center[1], w-center[0], h-center[1])
+    Y, X = np.ogrid[:h, :w]
+    dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
+    mask = dist_from_center <= radius
+    mask1 = mask * dist_from_center
+    return mask1
 
 def features_from_image(img, window_size=3):
     b = np.zeros((img.shape[0]-2, img.shape[1]-2, 9))
@@ -76,7 +87,6 @@ def inverse_pca(pca, fitset):
     fitset_res = pca.inverse_transform(components)
     return fitset_res
 
-
 def denoise_image(img_src, accum):
     ws = 3
     img = np.copy(img_src)
@@ -101,47 +111,63 @@ if __name__ == '__main__':
     ax[0].imshow(img, interpolation='none', cmap='gray', vmin=0, vmax=255)
     ax[1].set_title('src masked')
     ax[1].imshow(img1, interpolation='none', cmap='gray', vmin=0, vmax=255)
-    plt.show()
+ #   plt.show()
 
-shp = (149, 894)
 path = r"..\data\ResultImage.png"
 img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-
+shp = img.shape
 mean = 0.
 scale = 2.
-noise1= np.random.normal(mean, scale, shp)
-img1= img.astype(np.float) + noise1
-noise2= np.random.normal(mean, scale, shp)
-img2= img.astype(np.float) + noise2
+noise1 = np.random.normal(mean, scale, shp)
+img1 = img.astype(np.float) + noise1
+noise2 = np.random.normal(mean, scale, shp)
+img2 = img.astype(np.float) + noise2
 diff = img1 - img2 + 128.
 
-std= diff.std()
+std = diff.std()
 print(f'std = {std}')
 
 fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
 fig.suptitle('Source, noised, and denoised images')
-ax0.imshow(img1, interpolation='none', cmap='gray', vmin=110, vmax=146)
-ax1.imshow(img2, interpolation='none', cmap='gray', vmin=110, vmax=146)
+ax0.imshow(img1, interpolation='none', cmap='gray', vmin=0, vmax=255)
+ax1.imshow(img2, interpolation='none', cmap='gray', vmin=0, vmax=255)
 ax2.imshow(diff, interpolation='none', cmap='gray', vmin=110, vmax=146)
-plt.show()
+#plt.show()
 
-if __name__ == '__main__':
-    path = r"..\data\ResultImage.png"
-    accum = 0.83
-    noise_dev = 10.
-    img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-    noise1 = np.random.normal(scale=noise_dev, size=img.shape)
-    img_denoise1 = denoise_image(img1, accum)
-    img_denoise2 = denoise_image(img2, accum)
+accum = 0.83
+img_denoise1 = denoise_image(img1, accum).astype(np.float)
+img_denoise2 = denoise_image(img2, accum).astype(np.float)
 
-diff1 = img_denoise1 - img_denoise2
+diff1 = img_denoise1 - img_denoise2 + 128.
 
 std1 = diff1.std()
-print(f'std1 = {diff1}')
+print(f'std1 = {std1}')
 
 fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
-fig.suptitle('Source, noised, and denoised images')
-ax0.imshow(img_denoise1, interpolation='none', cmap='gray', vmin=110, vmax=146)
-ax1.imshow(img_denoise2, interpolation='none', cmap='gray', vmin=110, vmax=146)
-ax2.imshow(diff, interpolation='none', cmap='gray', vmin=110, vmax=146)
-plt.show()
+fig.suptitle('Noised1, Noised2, diff images')
+ax0.imshow(img_denoise1, interpolation='none', cmap='gray', vmin=0, vmax=255)
+ax1.imshow(img_denoise1 - img1 + 128, interpolation='none', cmap='gray', vmin=0, vmax=255)
+ax2.imshow(diff1, interpolation='none', cmap='gray', vmin=0, vmax=255)
+#plt.show()
+
+RADIUS = 62
+X = 74.49158877473633,222.69205612957614,371.89252348441596,521.0929908392559,670.2934581940956,819.4939255489355
+Y = 74.36447724850615,73.62868797671882,73.8928987049315,74.15710943314417,74.42132016135685,73.68553088956952
+XY = zip (X, Y)
+
+fiber_mask = np.zeros(shp, dtype = np.bool)
+inpaint_circular_masks(fiber_mask, XY, radius=RADIUS, value = True, inside=True)
+fiber_ferul = np.logical_not(fiber_mask)
+
+stdfiber = np.std(img1[fiber_mask])
+print(f'stdfiber = {stdfiber}')
+
+stdferul = np.std(img1[fiber_ferul])
+print(f'stdferul = {stdferul}')
+
+stdfiber1 = np.std(img_denoise1[fiber_mask])
+print(f'stdfiber1 = {stdfiber1}')
+
+stdferul1 = np.std(img_denoise1[fiber_ferul])
+print(f'stdferul1 = {stdferul1}')
+
