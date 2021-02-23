@@ -91,7 +91,7 @@ def denoise_image(img_src, accum):
     return img
 
 if __name__ == '__main__':
-    sz = (128,1024)
+    sz =  (149, 894)
     img = np.ones(sz, dtype=np.uint8) * (np.random.rand(sz[0],sz[1] )*255)
     img1 = np.copy(img)
     for i in range (7):
@@ -103,45 +103,40 @@ if __name__ == '__main__':
     ax[1].imshow(img1, interpolation='none', cmap='gray', vmin=0, vmax=255)
     plt.show()
 
-shp = (149, 894)
-path = r"..\data\ResultImage.png"
-img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
 
-mean = 0.
-scale = 2.
-noise1= np.random.normal(mean, scale, shp)
-img1= img.astype(np.float) + noise1
-noise2= np.random.normal(mean, scale, shp)
-img2= img.astype(np.float) + noise2
-diff = img1 - img2 + 128.
-
-std= diff.std()
-print(f'std = {std}')
-
-fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
-fig.suptitle('Source, noised, and denoised images')
-ax0.imshow(img1, interpolation='none', cmap='gray', vmin=110, vmax=146)
-ax1.imshow(img2, interpolation='none', cmap='gray', vmin=110, vmax=146)
-ax2.imshow(diff, interpolation='none', cmap='gray', vmin=110, vmax=146)
-plt.show()
-
-if __name__ == '__main__':
     path = r"..\data\ResultImage.png"
-    accum = 0.83
-    noise_dev = 10.
     img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-    noise1 = np.random.normal(scale=noise_dev, size=img.shape)
-    img_denoise1 = denoise_image(img1, accum)
-    img_denoise2 = denoise_image(img2, accum)
+    shp = img.shape
+    mean = 0.
+    scale = 2.
+    noise1 = np.random.normal(mean, scale, shp)
+    img1 = img.astype(np.float) + noise1
+    noise2 = np.random.normal(mean, scale, shp)
+    img2 = img.astype(np.float) + noise2
+    diff = img1 - img2 + 128.
 
-diff1 = img_denoise1 - img_denoise2
+    std = diff.std()
+    print(f'std = {std}')
 
-std1 = diff1.std()
-print(f'std1 = {diff1}')
+    fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
+    fig.suptitle('Source, noised, and denoised images')
+    ax0.imshow(img1, interpolation='none', cmap='gray', vmin=0, vmax=255)
+    ax1.imshow(img2, interpolation='none', cmap='gray', vmin=0, vmax=255)
+    ax2.imshow(diff, interpolation='none', cmap='gray', vmin=110, vmax=146)
+    plt.show()
 
-fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
-fig.suptitle('Source, noised, and denoised images')
-ax0.imshow(img_denoise1, interpolation='none', cmap='gray', vmin=110, vmax=146)
-ax1.imshow(img_denoise2, interpolation='none', cmap='gray', vmin=110, vmax=146)
-ax2.imshow(diff, interpolation='none', cmap='gray', vmin=110, vmax=146)
-plt.show()
+    accum = 0.83
+    img_denoise1 = denoise_image(img1, accum).astype(np.float)
+    img_denoise2 = denoise_image(img2, accum).astype(np.float)
+
+    diff1 = img_denoise1 - img_denoise2 + 128.
+
+    std1 = diff1.std()
+    print(f'std1 = {std1}')
+
+    fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
+    fig.suptitle('Noised1, Noised2, diff images')
+    ax0.imshow(img_denoise1, interpolation='none', cmap='gray', vmin=0, vmax=255)
+    ax1.imshow(img_denoise1 - img1 + 128, interpolation='none', cmap='gray', vmin=0, vmax=255)
+    ax2.imshow(diff1, interpolation='none', cmap='gray', vmin=0, vmax=255)
+    plt.show()
