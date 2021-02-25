@@ -159,15 +159,15 @@ fiber_mask = np.zeros(shp, dtype = np.bool)
 inpaint_circular_masks(fiber_mask, XY, radius=RADIUS, value = True, inside=True)
 fiber_ferul = np.logical_not(fiber_mask)
 
-stdfiber = np.std(img1[fiber_mask])
+stdfiber = np.std(diff[fiber_mask])
 print(f'stdfiber = {stdfiber}')
 
-stdferul = np.std(img1[fiber_ferul])
+stdferul = np.std(diff[fiber_ferul])
 print(f'stdferul = {stdferul}')
 
-stdfiber1 = np.std(img_denoise1[fiber_mask])
+stdfiber1 = np.std(diff1[fiber_mask])
 print(f'stdfiber1 = {stdfiber1}')
 
-stdferul1 = np.std(img_denoise1[fiber_ferul])
+stdferul1 = np.std(diff1[fiber_ferul])
 print(f'stdferul1 = {stdferul1}')
 
