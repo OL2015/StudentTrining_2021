@@ -101,7 +101,7 @@ def denoise_image(img_src, accum):
     return img
 
 if __name__ == '__main__':
-    sz = (128,1024)
+    sz =  (149, 894)
     img = np.ones(sz, dtype=np.uint8) * (np.random.rand(sz[0],sz[1] )*255)
     img1 = np.copy(img)
     for i in range (7):
