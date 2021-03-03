@@ -100,18 +100,17 @@ def denoise_image(img_src, accum):
     img = img.astype(np.uint8)
     return img
 
-if __name__ == '__main__':
-    sz =  (149, 894)
-    img = np.ones(sz, dtype=np.uint8) * (np.random.rand(sz[0],sz[1] )*255)
-    img1 = np.copy(img)
-    for i in range (7):
-        inpaint_circular_mask(img1, (128*(i+1), 64), 32, i*(255-32), inside=True)
-    fig, ax = plt.subplots(nrows=2, ncols=1 )
-    ax[0].set_title('Src ')
-    ax[0].imshow(img, interpolation='none', cmap='gray', vmin=0, vmax=255)
-    ax[1].set_title('src masked')
-    ax[1].imshow(img1, interpolation='none', cmap='gray', vmin=0, vmax=255)
- #   plt.show()
+sz =  (149, 894)
+img = np.ones(sz, dtype=np.uint8) * (np.random.rand(sz[0],sz[1] )*255)
+img1 = np.copy(img)
+for i in range (7):
+    inpaint_circular_mask(img1, (128*(i+1), 64), 32, i*(255-32), inside=True)
+fig, ax = plt.subplots(nrows=2, ncols=1 )
+ax[0].set_title('Src ')
+ax[0].imshow(img, interpolation='none', cmap='gray', vmin=0, vmax=255)
+ax[1].set_title('src masked')
+ax[1].imshow(img1, interpolation='none', cmap='gray', vmin=0, vmax=255)
+#   plt.show()
 
 path = r"..\data\ResultImage.png"
 img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
@@ -124,8 +123,8 @@ noise2 = np.random.normal(mean, scale, shp)
 img2 = img.astype(np.float) + noise2
 diff = img1 - img2 + 128.
 
-std = diff.std()
-print(f'std = {std}')
+stdnoise = diff.std()
+print(f'stdnoise = {stdnoise}')
 
 fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
 fig.suptitle('Source, noised, and denoised images')
@@ -140,8 +139,8 @@ img_denoise2 = denoise_image(img2, accum).astype(np.float)
 
 diff1 = img_denoise1 - img_denoise2 + 128.
 
-std1 = diff1.std()
-print(f'std1 = {std1}')
+stddenoise = diff1.std()
+print(f'stddenoise = {stddenoise}')
 
 fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
 fig.suptitle('Noised1, Noised2, diff images')
@@ -171,3 +170,32 @@ print(f'stdfiber1 = {stdfiber1}')
 stdferul1 = np.std(diff1[fiber_ferul])
 print(f'stdferul1 = {stdferul1}')
 
+path = r"..\data\ResultImage.png"
+img = cv2.imread(path, cv2.IMREAD_GRAYSCALE).astype(np.float)
+img1 = np.copy(img)
+n = img.shape[0]
+img1[1:, :] = img[0: n - 1, :]
+sharp = img - img1 + 128.
+shp = img.shape
+mean = 0.
+scale = 2.
+noise3 = np.random.normal(mean, scale, shp)
+imgn = img.astype(np.float) + noise3
+imgn1 = np.copy(imgn)
+imgn1[1:, :] = imgn[0: n - 1, :]
+noisesharp = imgn - imgn1 + 128.
+
+accum = 0.85
+imgn_denoise = denoise_image(imgn1, accum).astype(np.float)
+imgn_denoise3 = np.copy(imgn_denoise)
+imgn_denoise3[1:, :] = imgn_denoise[0: n - 1, :]
+denoisesharp = imgn_denoise - imgn_denoise3 + 128.
+
+stdsharp = np.std(sharp[fiber_ferul])
+print(f'stdsharp = {stdsharp}')
+
+stdnoisesharp = np.std(noisesharp[fiber_ferul])
+print(f'stdnoisesharp = {stdnoisesharp}')
+
+stddenoisesharp = np.std(denoisesharp[fiber_ferul])
+print(f'stddenoisesharp = {stddenoisesharp}')
