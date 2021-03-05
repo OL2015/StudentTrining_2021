@@ -100,102 +100,61 @@ def denoise_image(img_src, accum):
     img = img.astype(np.uint8)
     return img
 
-sz =  (149, 894)
-img = np.ones(sz, dtype=np.uint8) * (np.random.rand(sz[0],sz[1] )*255)
-img1 = np.copy(img)
-for i in range (7):
-    inpaint_circular_mask(img1, (128*(i+1), 64), 32, i*(255-32), inside=True)
-fig, ax = plt.subplots(nrows=2, ncols=1 )
-ax[0].set_title('Src ')
-ax[0].imshow(img, interpolation='none', cmap='gray', vmin=0, vmax=255)
-ax[1].set_title('src masked')
-ax[1].imshow(img1, interpolation='none', cmap='gray', vmin=0, vmax=255)
-#   plt.show()
+def image_sharpness(img, mask):
+    img_s = np.copy(img).astype(np.float)
+    n = img.shape[0]
+    img_s[1:, :] = img_s[0: n - 1, :]
+    sharp_img = img.astype(np.float) - img_s
+    sharp = np.std(sharp_img[mask])
+    return sharp
 
+def image_noise(img1, img2, mask):
+    diff1 = img1.astype(np.float) - img2.astype(np.float)
+    noise = diff1[mask].std()
+    return noise
+
+def plot_images (images, title, subtitles):
+    pass
+
+
+# read images and build masks
 path = r"..\data\ResultImage.png"
 img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+RADIUS = 62
+X = 74.49158877473633,222.69205612957614,371.89252348441596,521.0929908392559,670.2934581940956,819.4939255489355
+Y = 74.36447724850615,73.62868797671882,73.8928987049315,74.15710943314417,74.42132016135685,73.68553088956952
+XY = zip (X, Y)
 shp = img.shape
+fiber_mask = np.zeros(shp, dtype = np.bool)
+inpaint_circular_masks(fiber_mask, XY, radius=RADIUS, value = True, inside=True)
+ferrul_mask = np.logical_not(fiber_mask)
+
+
+# add random noise
 mean = 0.
 scale = 2.
 noise1 = np.random.normal(mean, scale, shp)
 img1 = img.astype(np.float) + noise1
 noise2 = np.random.normal(mean, scale, shp)
 img2 = img.astype(np.float) + noise2
-diff = img1 - img2 + 128.
 
-stdnoise = diff.std()
-print(f'stdnoise = {stdnoise}')
-
-fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
-fig.suptitle('Source, noised, and denoised images')
-ax0.imshow(img1, interpolation='none', cmap='gray', vmin=0, vmax=255)
-ax1.imshow(img2, interpolation='none', cmap='gray', vmin=0, vmax=255)
-ax2.imshow(diff, interpolation='none', cmap='gray', vmin=110, vmax=146)
-#plt.show()
-
-accum = 0.83
+#   denoise images
+accum = 6
 img_denoise1 = denoise_image(img1, accum).astype(np.float)
 img_denoise2 = denoise_image(img2, accum).astype(np.float)
 
-diff1 = img_denoise1 - img_denoise2 + 128.
+stdnoise = image_noise (img1, img2, fiber_mask)
+print(f'stddenoise = {stdnoise}')
+stdnoise_denoised =image_noise (img_denoise1, img_denoise2, fiber_mask)
+print(f'stdnoise_denoised = {stdnoise_denoised}')
 
-stddenoise = diff1.std()
-print(f'stddenoise = {stddenoise}')
+# measure image_sharpness()
+src_sharp = image_sharpness(img, ferrul_mask)
+print(f'src_sharp = {src_sharp}')
 
-fig, (ax0, ax1, ax2) = plt.subplots(3, 1)
-fig.suptitle('Noised1, Noised2, diff images')
-ax0.imshow(img_denoise1, interpolation='none', cmap='gray', vmin=0, vmax=255)
-ax1.imshow(img_denoise1 - img1 + 128, interpolation='none', cmap='gray', vmin=0, vmax=255)
-ax2.imshow(diff1, interpolation='none', cmap='gray', vmin=0, vmax=255)
-#plt.show()
+noise_sharp = image_sharpness(img1, ferrul_mask)
+print(f'noise_sharp = {noise_sharp}')
 
-RADIUS = 62
-X = 74.49158877473633,222.69205612957614,371.89252348441596,521.0929908392559,670.2934581940956,819.4939255489355
-Y = 74.36447724850615,73.62868797671882,73.8928987049315,74.15710943314417,74.42132016135685,73.68553088956952
-XY = zip (X, Y)
+denoise_sharp = image_sharpness(img_denoise2, ferrul_mask)
+print(f'denoise_sharp = {denoise_sharp}')
 
-fiber_mask = np.zeros(shp, dtype = np.bool)
-inpaint_circular_masks(fiber_mask, XY, radius=RADIUS, value = True, inside=True)
-fiber_ferul = np.logical_not(fiber_mask)
-
-stdfiber = np.std(diff[fiber_mask])
-print(f'stdfiber = {stdfiber}')
-
-stdferul = np.std(diff[fiber_ferul])
-print(f'stdferul = {stdferul}')
-
-stdfiber1 = np.std(diff1[fiber_mask])
-print(f'stdfiber1 = {stdfiber1}')
-
-stdferul1 = np.std(diff1[fiber_ferul])
-print(f'stdferul1 = {stdferul1}')
-
-path = r"..\data\ResultImage.png"
-img = cv2.imread(path, cv2.IMREAD_GRAYSCALE).astype(np.float)
-img1 = np.copy(img)
-n = img.shape[0]
-img1[1:, :] = img[0: n - 1, :]
-sharp = img - img1 + 128.
-shp = img.shape
-mean = 0.
-scale = 2.
-noise3 = np.random.normal(mean, scale, shp)
-imgn = img.astype(np.float) + noise3
-imgn1 = np.copy(imgn)
-imgn1[1:, :] = imgn[0: n - 1, :]
-noisesharp = imgn - imgn1 + 128.
-
-accum = 0.85
-imgn_denoise = denoise_image(imgn1, accum).astype(np.float)
-imgn_denoise3 = np.copy(imgn_denoise)
-imgn_denoise3[1:, :] = imgn_denoise[0: n - 1, :]
-denoisesharp = imgn_denoise - imgn_denoise3 + 128.
-
-stdsharp = np.std(sharp[fiber_ferul])
-print(f'stdsharp = {stdsharp}')
-
-stdnoisesharp = np.std(noisesharp[fiber_ferul])
-print(f'stdnoisesharp = {stdnoisesharp}')
-
-stddenoisesharp = np.std(denoisesharp[fiber_ferul])
-print(f'stddenoisesharp = {stddenoisesharp}')
